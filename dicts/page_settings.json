@@ -506,5 +506,19 @@
     "Previous Pane Tab": "上一个面板标签页",
     "Next Pane Tab": "下一个面板标签页",
     "Previous Pane": "上一个面板",
-    "Next Pane": "下一个面板"
+    "Next Pane": "下一个面板",
+    "Comprehensive guide and reference for the Antigravity Customization System. Use to explain how customizations work, their loading priority, discovery mechanisms, and to guide the creation of skills, rules, plugins, hooks, and MCP servers.": "Google Antigravity (AGY) 个性化定制系统的综合指南与参考，用于解释定制组件的工作原理、加载优先级、探索机制，并指导技能、规则、插件、Hook 和 MCP 服务器的创建。",
+    "Comprehensive guide and reference for the Antigravity Customization System. Use to explain how customizations work, their loading priority, discovery mechanisms, and to guide the creation of...": "Google Antigravity (AGY) 个性化定制系统的综合指南与参考。用于解释定制组件的工作原理、加载优先级、探索机制，并指导创建...",
+    "Comprehensive guide and reference for the Antigravity Customization System.": "Google Antigravity (AGY) 个性化定制系统的综合指南与参考。",
+    "including": "包含",
+    "active conversation": "条活动会话",
+    "active conversations": "条活动会话",
+    "archived conversation": "条已归档会话",
+    "archived conversations": "条已归档会话",
+    "archived conversations.": "条已归档会话。",
+    "archived conversation.": "条已归档会话。",
+    "including 1 active conversation": "包含 1 条活动会话",
+    "including 1 active conversations": "包含 1 条活动会话",
+    "including 0 active conversation": "包含 0 条活动会话",
+    "including 0 active conversations": "包含 0 条活动会话"
 }

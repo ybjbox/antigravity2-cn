@@ -508,5 +508,19 @@
     "Previous Pane Tab": "上一個面板分頁",
     "Next Pane Tab": "下一個面板分頁",
     "Previous Pane": "上一個面板",
-    "Next Pane": "下一個面板"
+    "Next Pane": "下一個面板",
+    "Comprehensive guide and reference for the Antigravity Customization System. Use to explain how customizations work, their loading priority, discovery mechanisms, and to guide the creation of skills, rules, plugins, hooks, and MCP servers.": "Google Antigravity (AGY) 個人化設定系統的綜合指南與參考，用於解釋自訂元件的工作原理、載入優先順序、探索機制，並指導技能、規則、外掛程式、Hook 和 MCP 伺服器的建立。",
+    "Comprehensive guide and reference for the Antigravity Customization System. Use to explain how customizations work, their loading priority, discovery mechanisms, and to guide the creation of...": "Google Antigravity (AGY) 個人化設定系統的綜合指南與參考。用於解釋自訂元件的工作原理、載入優先順序、探索機制，並指導建立...",
+    "Comprehensive guide and reference for the Antigravity Customization System.": "Google Antigravity (AGY) 個人化設定系統的綜合指南與參考。",
+    "including": "包含",
+    "active conversation": "條活動對話",
+    "active conversations": "條活動對話",
+    "archived conversation": "條已歸檔對話",
+    "archived conversations": "條已歸檔對話",
+    "archived conversations.": "條已歸檔對話。",
+    "archived conversation.": "條已歸檔對話。",
+    "including 1 active conversation": "包含 1 條活動對話",
+    "including 1 active conversations": "包含 1 條活動對話",
+    "including 0 active conversation": "包含 0 條活動對話",
+    "including 0 active conversations": "包含 0 條活動對話"
 }
