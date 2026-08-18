@@ -1,4 +1,5 @@
 {
+    "9222": "9222",
     "Agent Settings": "智能体设置",
     "Loading custom agents...": "正在加载自定义智能体...",
     "Loading metrics...": "正在加载指标数据...",
@@ -215,7 +216,6 @@
     "~/.gemini/antigravity-browser-profile": "~/.gemini/antigravity-browser-profile",
     "Browser CDP Port": "浏览器 CDP 端口",
     "Port number for Chrome DevTools Protocol remote debugging. Leave empty for default (9222).": "用于 Chrome DevTools Protocol 远程调试的端口号。留空则使用默认值 (9222)。",
-    "9222": "9222",
     "By using this app, you agree to its": "使用本应用即表示您同意其",
     "Terms of Service": "服务条款",
     "Provide Feedback": "提供反馈",
@@ -455,7 +455,6 @@
     "Manage your model quota and credits.": "管理您的模型配额和 AI 额度。",
     "Plan": "订阅计划",
     "Your Plan:": "您的计划：",
-    "Your Plan: Google AI Pro": "您的计划：Google AI Pro",
     "Your Plan: Google AI Ultra": "您的计划：Google AI Ultra",
     "You have used some of your weekly limit, it will fully refresh in": "您已使用了部分每周限制额度，完全刷新还需 ",
     "You have used some of your 5-hour limit, it will fully refresh in": "您已使用了部分 5 小时限制额度，完全刷新还需 ",
@@ -525,5 +524,11 @@
     "Five Hour Limit Remaining": "5 小时剩余配额",
     "5-Hour Limit Remaining": "5 小时剩余配额",
     "5 Hour Limit Remaining": "5 小时剩余配额",
-    "days, ": "天 "
+    "days, ": "天 ",
+    "agy-customizations": "AGY 个性化定制指南",
+    "antigravity-guide": "官方指南",
+    "Keep the app accessible from the menu bar and running in the background when all windows are closed.": "当所有窗口都关闭时，依然可以通过菜单栏/系统托盘访问应用程序，且保持后台运行。",
+    "Keep the app accessible from the menu bar and running in the background when all windows are closed": "当所有窗口都关闭时，依然可以通过菜单栏/系统托盘访问应用程序，且保持后台运行。",
+    "Keep in Menu Bar": "常驻系统菜单栏/托盘",
+    "Keep in menu bar": "常驻系统菜单栏/托盘"
 }
