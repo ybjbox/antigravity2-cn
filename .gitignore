@@ -9,3 +9,6 @@ AGENTS.md
 .codex/
 codex/
 .codegraph/
+
+# Proxy configuration & injection modules (local only)
+proxy_config/

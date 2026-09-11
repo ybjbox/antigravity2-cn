@@ -3,7 +3,7 @@
 👉 **[繁體中文版說明文件 (Traditional Chinese README)](README_TW.md)**
 
 > **支持系统**：Windows & macOS (均已内置一键脚本)  
-> **匹配版本**：Antigravity v2.9.1  
+> **匹配版本**：Antigravity v2.12.2  
 > **核心引擎**：Node.js (无需安装 Python，零依赖，极速极稳)  
 > **汉化范围**：包括软件界面、顶部系统菜单、任务栏右键菜单、加载动画、设置面板、新手引导及登录页。  
 > **注入原理**：通过 ASAR 还原与重包，安全注入 `preload.js` 动态翻译机制，绝不修改核心二进制，一键安装与完美还原。
@@ -98,6 +98,28 @@ node localization_engine.js --brand-title translated
 
 ---
 
+## 🔌 可选高级功能：网络透明代理自动注入 (Windows 免 TUN 方案)
+
+如果您处于网络受限环境（例如连通 Google AI / Gemini 接口受阻），且不希望开启系统的全局虚拟网卡/TUN 模式，本项目支持在安装汉化时**自动联动注入 Windows 免 TUN 强制代理工具**。
+
+该方案基于优秀的开源项目 **[yuaotian/antigravity-proxy](https://github.com/yuaotian/antigravity-proxy)**（基于 MinHook 的 DLL 劫持透明代理）。
+
+### 使用方法：
+1. 前往 **[yuaotian/antigravity-proxy](https://github.com/yuaotian/antigravity-proxy)** 获取编译好的文件：
+   - `version.dll`
+   - `dbghelp.dll`
+   - `config.json`
+2. 在当前汉化项目根目录新建 `proxy_config` 文件夹（该文件夹已加入 `.gitignore` 本地排除，绝不会被 Git 提交污染）。
+3. 将 `version.dll`、`dbghelp.dll` 以及按您本地代理端口（如 `127.0.0.1:7890` / `18080`）配置好的 `config.json` 放入 `proxy_config/` 目录。
+4. 正常双击运行 **`双击安装中文汉化.bat`**：
+   - 汉化引擎将**自动检测** `proxy_config/` 目录。
+   - 一步自动完成 **“界面中文汉化 + 代理模块注入”**，无需再在软件更新后每次手动拷贝 DLL 文件！
+5. **完全可选 & 零侵入**：
+   - 如果您不需要代理或未创建 `proxy_config/` 目录，安装流程保持 100% 官方纯净汉化，对普通用户零干扰。
+   - 运行 **`双击卸载还原官方英文.bat`** 时，同样会自动识别并清理安装目录下的代理文件，完美恢复官方纯净状态。
+
+---
+
 ## 🛠️ 汉化原理说明
 
 本引擎采用 **ASAR 包注入模式**，专为 **Antigravity 2.0+** 的 Electron 架构量身定制：
@@ -180,4 +202,5 @@ node localization_engine.js --brand-title translated
 ---
 
 ## 🤝 致谢
-感谢所有参与测试与反馈的贡献者！
+- 感谢所有参与测试与反馈的贡献者！
+- 特别鸣谢 **[yuaotian/antigravity-proxy](https://github.com/yuaotian/antigravity-proxy)** 提供优秀的 Windows 免 TUN 强制代理注入方案。

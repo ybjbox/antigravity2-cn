@@ -77,5 +77,11 @@
     "Show more": "显示更多",
     "Show less": "收起",
     "Show less...": "收起...",
-    "View Usage": "查看用量"
+    "View Usage": "查看用量",
+    "Search for commands...": "搜索命令...",
+    "Search for commands": "搜索命令",
+    "Split Terminal": "拆分终端",
+    "Split Conversation Horizontally": "水平拆分会话",
+    "Split Conversation Vertically": "垂直拆分会话",
+    "Find in conversation": "在会话中查找"
 }
