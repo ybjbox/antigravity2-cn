@@ -56,17 +56,17 @@ if (USE_TW) {
         "[修改] 正在向 updater.js 注入更新弹窗汉化...": "[修改] 正在向 updater.js 注入更新彈出視窗漢化...",
         "[修改] 更新弹窗汉化注入成功！": "[修改] 更新彈出視窗漢化注入成功！",
         "[打包] 正在将修改后的内容打包回 app.asar...": "[打包] 正在將修改後的內容打包回 app.asar...",
-        "[√] Antigravity 2.0 汉化部署完成！": "[√] Antigravity 2.0 漢化部署完成！",
-        "[√] Antigravity 1.0 汉化部署完成！": "[√] Antigravity 1.0 漢化部署完成！",
-        "[!] 未找到备份文件 app.asar.bak，可能尚未安装过汉化或备份被删除。": "[!] 未找到備份檔案 app.asar.bak，可能尚未安裝過漢化或備份已被刪除。",
-        "[还原] 正在用官方备份文件恢复...": "[還原] 正在用官方備份檔案恢復...",
-        "[还原] 已重置当前 app.asar 为官方原始备份包，以进行全新注入...": "[還原] 已重置目前 app.asar 為官方原始備份包，以進行全新注入...",
+        "[√] Antigravity 2.0 汉化部署完成！": "[√] Antigravity 2.0 繁體中文化套用完成！",
+        "[√] Antigravity 1.0 汉化部署完成！": "[√] Antigravity 1.0 繁體中文化套用完成！",
+        "[!] 未找到备份文件 app.asar.bak，可能尚未安装过汉化或备份被删除。": "[!] 未找到備份檔案 app.asar.bak，可能尚未安裝過繁中化或備份已被刪除。",
+        "[还原] 正在用官方备份文件恢复...": "[還原] 正在使用官方備份檔案還原...",
+        "[还原] 已重置当前 app.asar 为官方原始备份包，以进行全新注入...": "[還原] 已重設目前 app.asar 為官方原始備份包，以進行全新注入...",
         "[权限] 检测到当前用户对 macOS 应用目录缺少写入权限，正在尝试请求管理员权限 (sudo) 重新运行...": "[權限] 偵測到目前使用者對 macOS 應用程式目錄缺少寫入權限，正在嘗試請求管理員權限 (sudo) 重新執行...",
-        "[提示] 当前 app.asar 被锁定（可能是客户端正在运行），将使用当前包进行增量注入。": "[提示] 目前 app.asar 被鎖定（可能是用戶端正在執行），將使用目前包進行增量注入。",
-        "[还原] 已恢复 HTML: ": "[還原] 已恢復 HTML: ",
-        "[还原] 已删除汉化脚本": "[還原] 已刪除漢化指令碼",
-        "[√] 官方 app.asar 已成功恢复！": "[√] 官方 app.asar 已成功恢復！",
-        "[√] 校验值已同步，1.0 软件恢复至原始状态。": "[√] 校驗值已同步，1.0 軟體恢復至原始狀態。",
+        "[提示] 当前 app.asar 被锁定（可能是客户端正在运行），将使用当前包进行增量注入。": "[提示] 目前 app.asar 被鎖定（可能是應用程式正在執行），將使用目前包進行增量注入。",
+        "[还原] 已恢复 HTML: ": "[還原] 已還原 HTML: ",
+        "[还原] 已删除汉化脚本": "[還原] 已刪除中文化腳本",
+        "[√] 官方 app.asar 已成功恢复！": "[√] 官方 app.asar 已成功還原！",
+        "[√] 校验值已同步，1.0 软件恢复至原始状态。": "[√] 校驗值已同步，1.0 軟體已還原至原始狀態。",
         "[错误] 手动指定的路径不存在:": "[錯誤] 手動指定的路徑不存在:",
         "[错误] 未在资源目录中找到 app.asar:": "[錯誤] 未在資源目錄中找到 app.asar:",
         "[错误] 解压后未能在指定路径找到 preload.js:": "[錯誤] 解壓後未能在指定路徑找到 preload.js:",
@@ -180,7 +180,7 @@ function generateJs() {
     const longEntries = REPLACEMENT_ENTRIES_PLACEHOLDER;
     const translatedValues = new WeakMap();
 
-    // 轻量级安全隔离：跳过脚本、样式、代码块(pre/code)以及编辑器区域
+    // 轻量级安全隔离：跳过脚本、样式、代码块(pre/code)、编辑器区域以及终端容器
     const SKIP_TAGS = ['SCRIPT', 'STYLE', 'PRE', 'CODE'];
 
     function isCodeOrEditor(node) {
@@ -188,7 +188,7 @@ function generateJs() {
             if (!node) return false;
             const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
             if (!el || typeof el.closest !== 'function') return false;
-            return !!el.closest('pre, code, .monaco-editor, [contenteditable="true"]');
+            return !!el.closest('pre, code, .monaco-editor, [contenteditable="true"], .terminal, .xterm');
         } catch (e) {
             return false;
         }
@@ -222,12 +222,13 @@ function generateJs() {
     function translateNode(node) {
         try {
             if (!node) return;
+            if (isCodeOrEditor(node)) return;
             
             if (node.nodeType === Node.ELEMENT_NODE) {
                 const tag = node.tagName.toUpperCase();
                 if (SKIP_TAGS.includes(tag)) return;
                 if (node.isContentEditable) return;
-                if (node.classList && node.classList.contains('monaco-editor')) return;
+                if (node.classList && (node.classList.contains('monaco-editor') || node.classList.contains('terminal') || node.classList.contains('xterm'))) return;
 
                 // 翻译属性：placeholder, title, aria-label
                 for (const attr of ['placeholder', 'title', 'aria-label']) {
@@ -247,6 +248,13 @@ function generateJs() {
                                     if (/option/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個選項...") : ("显示另外 " + num + " 个选项...");
                                 }
                                 return USE_TW ? ("顯示另外 " + num + " 個...") : ("显示另外 " + num + " 个...");
+                            });
+                            node.setAttribute(attr, trans);
+                        } else if (/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i.test(t)) {
+                            const trans = t.replace(/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i, (match, del, name, count, dot) => {
+                                const delPrefix = del ? (USE_TW ? "永久刪除 " : "永久删除 ") : "";
+                                const suffix = dot ? "。" : "";
+                                return delPrefix + name + (USE_TW ? ("（包含 " + count + " 個活躍對話）") : ("（包含 " + count + " 个活跃会话）")) + suffix;
                             });
                             node.setAttribute(attr, trans);
                         }
@@ -299,11 +307,11 @@ function generateJs() {
                 } else if (/^The Spanner remote/i.test(valNorm)) {
                     newVal = USE_TW ? "Spanner 遠端 MCP 伺服器可讓您從 AI 開發環境中存取並執行 Spanner 工具，以建立、管理和查詢分散式資料庫資源。" : "Spanner 远程 MCP 服务器可让您从 AI 开发环境中访问并运行 Spanner 工具，以创建、管理和查询分布式数据库资源。";
                 } else if (/^Ask questions\.\s*Get answers\./i.test(valNorm) || /PostHog data/i.test(valNorm)) {
-                    newVal = USE_TW ? "提問，即得答案。該 MCP 是供您的編程代理呼叫的伺服器。用英語提出問題，它會針對您的 PostHog 資料執行查詢，結果將直接呈現在您的編輯器中。" : "提问，即得答案。该 MCP 是供您的编程智能体调用的服务器。用英语提出问题，它会针对您的 PostHog 数据运行查询，结果将直接呈现在您的编辑器中。";
+                    newVal = USE_TW ? "提問，即得答案。該 MCP 是供您的程式設計代理呼叫的伺服器。用英語提出問題，它會針對您的 PostHog 資料執行查詢，結果將直接呈現在您的編輯器中。" : "提问，即得答案。该 MCP 是供您的编程智能体调用的服务器。用英语提出问题，它会针对您的 PostHog 数据运行查询，结果将直接呈现在您的编辑器中。";
                 } else if (/^The GKE remote MCP server/i.test(valNorm)) {
                     newVal = USE_TW ? "GKE 遠端 MCP 伺服器提供對 GKE Kubernetes 資源的讀寫存取權限。允許 AI 代理檢查並監控您的執行環境。" : "GKE 远程 MCP 服务器提供对 GKE Kubernetes 资源的读写权限。允许 AI 智能体检查并监控您的运行环境。";
                 } else if (/^Cloud CLI MCP Server/i.test(valNorm)) {
-                    newVal = USE_TW ? "Cloud CLI MCP 伺服器提供在遠端沙箱環境中執行 gcloud 與 bq CLI 命令的工具集。" : "Cloud CLI MCP 服务器提供在远程沙箱环境中运行 gcloud 与 bq CLI 命令的工具集。";
+                    newVal = USE_TW ? "Cloud CLI MCP 伺服器提供在遠端沙箱環境中執行 gcloud 與 bq CLI 指令的工具集。" : "Cloud CLI MCP 服务器提供在远程沙箱环境中运行 gcloud 与 bq CLI 命令的工具集。";
                 } else if (/^The Apigee API hub remote MCP server/i.test(valNorm)) {
                     newVal = USE_TW ? "Apigee API hub 遠端 MCP 伺服器可讓您管理註冊在 Apigee API hub 中的 API、版本、規格、操作、部署、屬性、外部 API 以及相依性。" : "Apigee API hub 远程 MCP 服务器可让您管理注册在 Apigee API hub 中的 API、版本、规范、操作、部署、属性、外部 API 以及依赖项。";
                 } else if (/^The Google Home Developer MCP server/i.test(valNorm)) {
@@ -366,7 +374,7 @@ function generateJs() {
                     newVal = valNorm.replace(/^Show\\s+(\\d+)\\s+more(\\s+(results?|items?|commands?|options?))?(\\.\\.\\.|…)?$/i, (match, num, p2, type) => {
                         if (type) {
                             if (/result/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個結果...") : ("显示另外 " + num + " 个结果...");
-                            if (/command/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個命令...") : ("显示另外 " + num + " 个命令...");
+                            if (/command/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個指令...") : ("显示另外 " + num + " 个命令...");
                             if (/item/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個項目...") : ("显示另外 " + num + " 个项目...");
                             if (/option/i.test(type)) return USE_TW ? ("顯示另外 " + num + " 個選項...") : ("显示另外 " + num + " 个选项...");
                         }
@@ -399,15 +407,31 @@ function generateJs() {
                     });
                 } else if (/^(.+?): context deadline exceeded$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^(.+?): context deadline exceeded$/i, (match, prefix) => {
-                        return prefix + (USE_TW ? ": 請求超時 (context deadline exceeded)" : ": 请求超时 (context deadline exceeded)");
+                        return prefix + (USE_TW ? ": 要求逾時 (context deadline exceeded)" : ": 请求超时 (context deadline exceeded)");
                     });
                 } else if (/^(.+?): i\\/o timeout$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^(.+?): i\\/o timeout$/i, (match, prefix) => {
-                        return prefix + (USE_TW ? ": I/O 超時 (i/o timeout)" : ": I/O 超时 (i/o timeout)");
+                        return prefix + (USE_TW ? ": I/O 逾時 (i/o timeout)" : ": I/O 超时 (i/o timeout)");
                     });
                 } else if (/^Are you sure you want to delete (the |this )?project (.+?)\\??$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^Are you sure you want to delete (the |this )?project (.+?)\\??$/i, (match, article, name) => {
                         return USE_TW ? ("您確定要刪除專案 " + name + " 嗎？") : ("您确定要删除项目 " + name + " 吗？");
+                    });
+                } else if (/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i, (match, del, name, count, dot) => {
+                        const delPrefix = del ? (USE_TW ? "永久刪除 " : "永久删除 ") : "";
+                        const suffix = dot ? "。" : "";
+                        return delPrefix + name + (USE_TW ? ("（包含 " + count + " 個活躍對話）") : ("（包含 " + count + " 个活跃会话）")) + suffix;
+                    });
+                } else if (/^including\\s+(\\d+)\\s+active conversations?([.。])?$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^including\\s+(\\d+)\\s+active conversations?([.。])?$/i, (match, count, dot) => {
+                        const suffix = dot ? "。" : "";
+                        return (USE_TW ? ("包含 " + count + " 個活躍對話") : ("包含 " + count + " 个活跃会话")) + suffix;
+                    });
+                } else if (/^(\\d+)\\s+active conversations?([.。])?$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^(\\d+)\\s+active conversations?([.。])?$/i, (match, count, dot) => {
+                        const suffix = dot ? "。" : "";
+                        return (USE_TW ? (count + " 個活躍對話") : (count + " 个活跃会话")) + suffix;
                     });
                 } else if (/^The (.+?) remote MCP server lets you access and run (.+?) tools to (.+)$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^The (.+?) remote MCP server lets you access and run (.+?) tools to (.+)$/i, (match, name, tools, action) => {
@@ -656,6 +680,35 @@ function runCommandSync(cmd) {
     }
 }
 
+function cleanElectronCache() {
+    let appSupportDir = "";
+    if (process.platform === 'darwin') {
+        appSupportDir = path.join(os.homedir(), 'Library', 'Application Support', 'Antigravity');
+    } else if (process.platform === 'win32') {
+        const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+        appSupportDir = path.join(appData, 'Antigravity');
+    } else {
+        appSupportDir = path.join(os.homedir(), '.config', 'Antigravity');
+    }
+
+    if (!fs.existsSync(appSupportDir)) return;
+
+    const cacheDirs = ['Cache', 'Code Cache', 'GPUCache', 'DawnWebGPUCache', 'DawnGraphiteCache'];
+    let cleanedCount = 0;
+    for (const c of cacheDirs) {
+        const p = path.join(appSupportDir, c);
+        if (fs.existsSync(p)) {
+            try {
+                fs.rmSync(p, { recursive: true, force: true });
+                cleanedCount++;
+            } catch (e) {}
+        }
+    }
+    if (cleanedCount > 0) {
+        console.log(`[缓存] 已自动清理 ${cleanedCount} 个应用缓存目录，避免新旧版本字节码冲突。`);
+    }
+}
+
 function resignAppOnMac(anyPath) {
     if (process.platform !== 'darwin') return;
     
@@ -672,6 +725,9 @@ function resignAppOnMac(anyPath) {
     }
     
     if (targetApp && fs.existsSync(targetApp)) {
+        try {
+            runCommandSync(`xattr -d -r com.apple.quarantine "${targetApp}"`);
+        } catch (e) {}
         console.log(`[签名] 检测到 macOS 平台，正在对应用包进行本地 ad-hoc 深度重签名: ${targetApp} ...`);
         const signRes = runCommandSync(`codesign --force --deep --sign - "${targetApp}"`);
         if (signRes.success) {
@@ -719,9 +775,15 @@ function install20(resourcesDir) {
         return false;
     }
 
-    // 1. 备份
-    if (!fs.existsSync(bakPath)) {
-        console.log(`[备份] 正在创建官方原始包备份: app.asar.bak ...`);
+    // 1. 备份与官方更新检测
+    let isAlreadyLocalized = false;
+    try {
+        const asarBuffer = fs.readFileSync(asarPath);
+        isAlreadyLocalized = asarBuffer.indexOf(Buffer.from(SIGNATURE_START, "utf8")) !== -1;
+    } catch (e) {}
+
+    if (!isAlreadyLocalized) {
+        console.log(`[备份] 检测到全新官方英文版本，正在同步创建/更新官方备份包: ${bakPath} ...`);
         try {
             fs.copyFileSync(asarPath, bakPath);
             console.log(`[备份] 备份成功！`);
@@ -732,13 +794,22 @@ function install20(resourcesDir) {
             }
             return false;
         }
-    } else {
+    } else if (fs.existsSync(bakPath)) {
         // 尝试用官方备份覆盖当前 app.asar，以确保每次汉化都基于最干净的官方英文包
         try {
             fs.copyFileSync(bakPath, asarPath);
             console.log(`[还原] 已重置当前 app.asar 为官方原始备份包，以进行全新注入...`);
         } catch (e) {
             console.log(`[提示] 当前 app.asar 被锁定（可能是客户端正在运行），将使用当前包进行增量注入。`);
+        }
+    } else {
+        console.log(`[备份] 正在创建官方原始包备份: app.asar.bak ...`);
+        try {
+            fs.copyFileSync(asarPath, bakPath);
+            console.log(`[备份] 备份成功！`);
+        } catch (e) {
+            console.error(`[错误] 创建备份失败: ${e.message}`);
+            return false;
         }
     }
 
@@ -795,12 +866,12 @@ function install20(resourcesDir) {
         'Help': '說明',
         'New Window': '開新視窗',
         'Create Project': '建立專案',
-        'Command Palette': '命令面板',
+        'Command Palette': '命令選擇區',
         'Docs': '說明文件',
         'Check for Updates': '檢查更新',
         'Toggle Developer Tools': '切換開發人員工具',
         'Undo': '復原',
-        'Redo': '取消復原',
+        'Redo': '重做',
         'Cut': '剪下',
         'Copy': '複製',
         'Paste': '貼上',
@@ -900,9 +971,9 @@ function install20(resourcesDir) {
         const replacementCreate = `function createTray(actions) {
     /* --- TRAY TRANSLATION START --- */
     const translations = ${USE_TW ? `{
-        'No agents running': '無執行中的智能體',
-        'Open Antigravity': '開啟反重力智能編程',
-        'Quit': '退出'
+        'No agents running': '無執行中的代理',
+        'Open Antigravity': '開啟 Antigravity',
+        'Quit': '結束'
     }` : `{
         'No agents running': '无运行中的智能体',
         'Open Antigravity': '打开反重力智能编程',
@@ -917,7 +988,7 @@ function install20(resourcesDir) {
         
         let trayPatched = trayCleaned.replace(targetCreate, replacementCreate);
         
-        // 2. 注入托盘图标双击弹出/聚焦 Antigravity 界面事件
+        // 2. 注入系統匣圖示點兩下彈出/聚焦 Antigravity 介面事件
         const dblClickTarget = /tray\.setContextMenu\(contextMenu\);/;
         const dblClickReplacement = `tray.setContextMenu(contextMenu);
     /* --- TRAY DOUBLE CLICK START --- */
@@ -937,7 +1008,7 @@ function install20(resourcesDir) {
         // 3. 使用正则替换 updateTrayAgentCount 里的动态显示文本
         const countRegex = /countItem\.label\s*=\s*\([\s\S]*?' running';/g;
         const replacementCount = USE_TW 
-            ? "countItem.label = count > 0 ? `${count} 個智能體執行中` : '無執行中的智能體';"
+            ? "countItem.label = count > 0 ? `${count} 個代理執行中` : '無執行中的代理';"
             : "countItem.label = count > 0 ? `${count} 个智能体运行中` : '无运行中的智能体';";
         trayPatched = trayPatched.replace(countRegex, replacementCount);
         
@@ -951,12 +1022,14 @@ function install20(resourcesDir) {
         console.log(`[修改] 正在向 loadingOverlay.js 注入加载页汉化...`);
         let loadingContent = fs.readFileSync(loadingPath, 'utf-8');
         
-        const targetText = '<div class="text">Loading Antigravity</div>';
         const replacementText = USE_TW
-            ? '<div class="text">反重力引擎已啟動，正在努力擺脫地心引力...</div>'
-            : '<div class="text">反重力引擎已启动，正在努力摆脱地心引力...</div>';
+            ? '<div class="text">正在載入 Antigravity…</div>'
+            : '<div class="text">正在加载 Antigravity…</div>';
         
-        loadingContent = loadingContent.replace(targetText, replacementText);
+        loadingContent = loadingContent
+            .replace('<div class="text">Loading Antigravity</div>', replacementText)
+            .replace('<div class="text">反重力引擎已啟動，正在努力擺脫地心引力...</div>', replacementText)
+            .replace('<div class="text">反重力引擎已启动，正在努力摆脱地心引力...</div>', replacementText);
         
         fs.writeFileSync(loadingPath, loadingContent, 'utf-8');
         console.log(`[修改] 加载页汉化注入成功！`);
@@ -974,8 +1047,8 @@ function install20(resourcesDir) {
                 buttons: ['OK'],`;
         const replacementOptions = USE_TW
             ? `                title: '檢查更新',
-                message: '暫無可用更新',
-                buttons: ['確定'],`
+                message: '目前沒有可用的更新',
+                buttons: ['好'],`
             : `                title: '检查更新',
                 message: '暂无可用更新',
                 buttons: ['确定'],`;
@@ -998,6 +1071,7 @@ function install20(resourcesDir) {
         return false;
     }
 
+    cleanElectronCache();
     resignAppOnMac(resourcesDir);
     console.log(`[√] Antigravity 2.0 汉化部署完成！`);
     return true;
