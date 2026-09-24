@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const crypto = require('crypto');
 const child_process = require('child_process');
 
 // --tw 參數：使用繁體中文字典 (dicts_tw/)，否則使用預設簡體字典 (dicts/)
@@ -183,12 +185,21 @@ function generateJs() {
     // 轻量级安全隔离：跳过脚本、样式、代码块(pre/code)、编辑器区域以及终端容器
     const SKIP_TAGS = ['SCRIPT', 'STYLE', 'PRE', 'CODE'];
 
+    // 代码及编辑器隔离选择器：排除代码块、编辑器、文件预览器、代码差异区、终端及语法高亮 Token
+    const CODE_ISOLATION_SELECTOR = 'pre, code, .monaco-editor, .cm-editor, .cm-line, [contenteditable="true"], .terminal, .xterm, .code-line, .code-block, .line-content, [aria-label="File Viewer"], [data-file-uri], [class*="diffEditor"], .token, .hljs, [class*="mtk"]';
+
     function isCodeOrEditor(node) {
         try {
             if (!node) return false;
-            const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-            if (!el || typeof el.closest !== 'function') return false;
-            return !!el.closest('pre, code, .monaco-editor, [contenteditable="true"], .terminal, .xterm');
+            let el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+            while (el) {
+                if (typeof el.closest === 'function' && el.closest(CODE_ISOLATION_SELECTOR)) {
+                    return true;
+                }
+                const root = typeof el.getRootNode === 'function' ? el.getRootNode() : null;
+                el = (root && root.host) ? root.host : null;
+            }
+            return false;
         } catch (e) {
             return false;
         }
