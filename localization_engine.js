@@ -4,6 +4,22 @@ const os = require('os');
 const crypto = require('crypto');
 const child_process = require('child_process');
 
+// macOS 环境下自动补全 PATH，确保 npx、codesign 等工具能被顺利找到
+if (process.platform === 'darwin') {
+    const extraPaths = ['/usr/local/bin', '/opt/homebrew/bin', '/opt/homebrew/sbin'];
+    const currentPaths = (process.env.PATH || '').split(':');
+    for (const p of extraPaths) {
+        if (!currentPaths.includes(p) && fs.existsSync(p)) {
+            currentPaths.unshift(p);
+        }
+    }
+    const nodeBinDir = path.dirname(process.execPath);
+    if (!currentPaths.includes(nodeBinDir)) {
+        currentPaths.unshift(nodeBinDir);
+    }
+    process.env.PATH = currentPaths.join(':');
+}
+
 // --tw 參數：使用繁體中文字典 (dicts_tw/)，否則使用預設簡體字典 (dicts/)
 const USE_TW = process.argv.includes('--tw');
 const DICTS_FOLDER = USE_TW ? 'dicts_tw' : 'dicts';
@@ -261,6 +277,13 @@ function generateJs() {
                                 return USE_TW ? ("顯示另外 " + num + " 個...") : ("显示另外 " + num + " 个...");
                             });
                             node.setAttribute(attr, trans);
+                        } else if (/^Show\\s+(\\d+)\\s+breakdown(s)?$/i.test(t)) {
+                            const trans = t.replace(/^Show\\s+(\\d+)\\s+breakdown(s)?$/i, (m, num) => {
+                                return USE_TW ? ("顯示 " + num + " 項明細") : ("显示 " + num + " 项细目");
+                            });
+                            node.setAttribute(attr, trans);
+                        } else if (/^Hide\\s+breakdown(s)?$/i.test(t)) {
+                            node.setAttribute(attr, USE_TW ? "收起明細" : "收起细目");
                         } else if (/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i.test(t)) {
                             const trans = t.replace(/^(?:(Permanently delete)\\s+)?(.+?)\\s+including\\s+(\\d+)\\s+active conversations?([.。])?$/i, (match, del, name, count, dot) => {
                                 const delPrefix = del ? (USE_TW ? "永久刪除 " : "永久删除 ") : "";
@@ -311,6 +334,14 @@ function generateJs() {
                     newVal = map.get(valNorm);
                 } else if (lowerMap.has(valLower)) {
                     newVal = lowerMap.get(valLower);
+                } else if (/^to have the agent generate a plan\\.?$/i.test(valNorm)) {
+                    newVal = USE_TW ? "讓代理生成計劃。" : "让智能体生成计划。";
+                } else if ((valNorm === 'Type' || valNorm === 'and select') && node.parentElement && (
+                    (typeof node.parentElement.closest === 'function' && node.parentElement.closest('[data-testid="plan-command-fyi-alert"]')) ||
+                    (node.parentElement.textContent && node.parentElement.textContent.includes('generate a plan'))
+                )) {
+                    if (valNorm === 'Type') newVal = USE_TW ? "輸入" : "输入";
+                    else if (valNorm === 'and select') newVal = USE_TW ? "並選取" : "并选择";
                 } else if (/^The AlloyDB for PostgreSQL remote/i.test(valNorm)) {
                     newVal = USE_TW ? "AlloyDB for PostgreSQL 遠端 MCP 伺服器可讓您存取並執行 AlloyDB 工具，用於管理 AlloyDB 叢集及執行個體、管理使用者，以及建立和復原資料備份。" : "AlloyDB for PostgreSQL 远程 MCP 服务器可让您访问并运行 AlloyDB 工具，用于管理 AlloyDB 集群及实例、管理用户，以及创建和恢复数据备份。";
                 } else if (/^The Cloud SQL remote/i.test(valNorm)) {
@@ -391,6 +422,20 @@ function generateJs() {
                         }
                         return USE_TW ? ("顯示另外 " + num + " 個...") : ("显示另外 " + num + " 个...");
                     });
+                } else if (/^Show\\s+(\\d+)\\s+breakdown(s)?$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^Show\\s+(\\d+)\\s+breakdown(s)?$/i, (match, num) => {
+                        return USE_TW ? ("顯示 " + num + " 項明細") : ("显示 " + num + " 项细目");
+                    });
+                } else if (/^Hide\\s+breakdown(s)?$/i.test(valNorm)) {
+                    newVal = USE_TW ? "收起明細" : "收起细目";
+                } else if (/^Show\\s+breakdown(s)?$/i.test(valNorm)) {
+                    newVal = USE_TW ? "顯示明細" : "显示细目";
+                } else if (/^Hide\\s+tools$/i.test(valNorm)) {
+                    newVal = USE_TW ? "收起工具" : "收起工具";
+                } else if (/^(\\d+)\\s+tools$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^(\\d+)\\s+tools$/i, (match, num) => {
+                        return num + (USE_TW ? " 個工具" : " 个工具");
+                    });
                 } else if (/^See all\\s*\\((\\d+)\\)$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^See all\\s*\\((\\d+)\\)$/i, (match, num) => {
                         return USE_TW ? ("顯示全部 (" + num + ")") : ("显示全部 (" + num + ")");
@@ -452,6 +497,15 @@ function generateJs() {
                     newVal = valNorm.replace(/^The (.+?) remote MCP server lets you manage (.+) resources\\.?$/i, (match, name, res) => {
                         return name + (USE_TW ? " 遠端 MCP 伺服器可讓您管理 " : " 远程 MCP 服务器可让您管理 ") + res + (USE_TW ? " 資源。" : " 资源。");
                     });
+                } else if (/^The (.+?) remote MCP server (allows you to|lets you) (.+)$/i.test(valNorm)) {
+                    newVal = valNorm.replace(/^The (.+?) remote MCP server (allows you to|lets you) (.+)$/i, (match, name, verb, rest) => {
+                        let text = rest;
+                        text = text.replace(/enroll projects/gi, USE_TW ? "註冊專案" : "注册项目")
+                                   .replace(/generate audit and scope reports/gi, USE_TW ? "產生稽核與範圍報告" : "生成审计与范围报告")
+                                   .replace(/check resource enrollment statuses/gi, USE_TW ? "檢查資源註冊狀態" : "检查资源注册状态")
+                                   .replace(/in the (.+?) region/gi, (m, r) => (USE_TW ? "在 " + r + " 區域" : "在 " + r + " 区域"));
+                        return name + (USE_TW ? " 遠端 MCP 伺服器允許您 " : " 远程 MCP 服务器允许您 ") + text;
+                    });
                 } else if (/^Send feedback as(\\s+(.+))?$/i.test(valNorm)) {
                     newVal = valNorm.replace(/^Send feedback as(\\s+(.+))?$/i, (match, p1, email) => {
                         if (email) {
@@ -460,14 +514,17 @@ function generateJs() {
                         return USE_TW ? "以此身分傳送意見回饋：" : "以如下身份发送反馈：";
                     });
                 } else {
-                    // 2. 长句子串滑动替换与前缀截断智能匹配 (缩短至前 18 字符即可高精度命中)
+                    // 2. 长句子串滑动替换与末尾截断智能匹配 (仅当原句带有省略号截断时，才允许基于长前缀匹配)
                     for (const [key, translated] of longEntries) {
                         if (key.length > 15 && valNorm.includes(key)) {
                             newVal = newVal.split(key).join(translated);
                             break;
-                        } else if (key.length >= 18 && valNorm.length >= 18 && valLower.slice(0, 18) === key.slice(0, 18).toLowerCase()) {
-                            newVal = translated;
-                            break;
+                        } else if ((valNorm.endsWith('...') || valNorm.endsWith('…')) && valNorm.length >= 35) {
+                            const cleanVal = valNorm.replace(/(\.\.\.|…)$/, '').trim().toLowerCase();
+                            if (cleanVal.length >= 30 && key.toLowerCase().startsWith(cleanVal)) {
+                                newVal = translated;
+                                break;
+                            }
                         }
                     }
                 }
@@ -480,14 +537,198 @@ function generateJs() {
         } catch (e) {}
     }
 
+    let mcpSnifferTimer = null;
+    let lastCapturedCount = 0;
+    function scheduleMcpSniffer() {
+        if (mcpSnifferTimer) clearTimeout(mcpSnifferTimer);
+        mcpSnifferTimer = setTimeout(runMcpSniffer, 600);
+    }
+
+    function extractMcpCatalog(screen) {
+        if (!screen) return null;
+        let templates = null;
+        try {
+            const findFiber = (dom) => {
+                if (!dom) return null;
+                const k = Object.keys(dom).find(key => key.startsWith('__reactFiber$') || key.startsWith('__reactInternalInstance$'));
+                return k ? dom[k] : null;
+            };
+
+            const candidates = [
+                screen,
+                screen.querySelector('.divide-y'),
+                screen.querySelector('.divide-y > div')
+            ].filter(Boolean);
+
+            for (const dom of candidates) {
+                let fiber = findFiber(dom);
+                let queue = [fiber];
+                let visited = new Set();
+                let depth = 0;
+                while (queue.length > 0 && depth < 300) {
+                    depth++;
+                    const cur = queue.shift();
+                    if (!cur || visited.has(cur)) continue;
+                    visited.add(cur);
+
+                    if (cur.memoizedProps && Array.isArray(cur.memoizedProps.mcpTemplates) && cur.memoizedProps.mcpTemplates.length > 0) {
+                        templates = cur.memoizedProps.mcpTemplates;
+                        break;
+                    }
+                    if (cur.child) queue.push(cur.child);
+                    if (cur.sibling) queue.push(cur.sibling);
+                    if (cur.return) queue.push(cur.return);
+                }
+                if (templates) break;
+            }
+        } catch (e) {}
+
+        if (!templates || templates.length === 0) {
+            try {
+                const rows = screen.querySelectorAll('.divide-y > div');
+                if (rows && rows.length > 0) {
+                    const domItems = [];
+                    for (const row of rows) {
+                        const titleEl = row.querySelector('a, span.font-medium, .text-sm.font-medium');
+                        const descEl = row.querySelector('.line-clamp-2, .text-xs.text-muted-foreground.mt-1');
+                        const title = titleEl ? (titleEl.childNodes[0]?.textContent || titleEl.textContent || '').trim() : '';
+                        const desc = descEl ? (descEl.textContent || '').trim() : '';
+                        if (title || desc) {
+                            domItems.push({
+                                id: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                                title: title,
+                                description: desc
+                            });
+                        }
+                    }
+                    if (domItems.length > 0) {
+                        templates = domItems;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        return templates;
+    }
+
+    function renderBadge(screen, catalog) {
+        try {
+            if (!screen) return;
+            let badge = document.getElementById('__antigravity_mcp_badge__');
+            const searchRow = screen.querySelector('.relative.flex.items-center');
+            if (!badge && searchRow && searchRow.parentNode) {
+                badge = document.createElement('div');
+                badge.id = '__antigravity_mcp_badge__';
+                badge.className = 'text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded flex items-center justify-between cursor-pointer select-none transition-all';
+                badge.style.marginTop = '6px';
+                badge.style.marginBottom = '2px';
+                searchRow.parentNode.insertBefore(badge, searchRow.nextSibling);
+            }
+            if (badge) {
+                const scText = '✓ 已自动捕获 ' + catalog.length + ' 个 MCP 服务器（点击复制 JSON）';
+                const tcText = '✓ 已自動捕獲 ' + catalog.length + ' 個 MCP 伺服器（點擊複製 JSON）';
+                badge.innerHTML = '<span>' + (USE_TW ? tcText : scText) + '</span><span style="opacity:0.75; font-size:11px;">' + (USE_TW ? '點擊複製' : '点击复制') + '</span>';
+                badge.onclick = () => {
+                    try {
+                        navigator.clipboard.writeText(JSON.stringify(catalog, null, 2));
+                        badge.innerHTML = '<span>' + (USE_TW ? '✓ 已複製 JSON 到剪貼簿！' : '✓ 已复制 JSON 到剪贴板！') + '</span>';
+                        setTimeout(() => {
+                            if (badge) badge.innerHTML = '<span>' + (USE_TW ? tcText : scText) + '</span><span style="opacity:0.75; font-size:11px;">' + (USE_TW ? '點擊複製' : '点击复制') + '</span>';
+                        }, 2000);
+                    } catch (err) {}
+                };
+            }
+        } catch (e) {}
+    }
+
+    function runMcpSniffer(retryCount = 0) {
+        try {
+            const screen = document.querySelector('[data-testid="add-mcp-screen"]');
+            if (!screen) return;
+            const items = extractMcpCatalog(screen);
+            if (!items || items.length === 0) {
+                if (retryCount < 12) {
+                    setTimeout(() => runMcpSniffer(retryCount + 1), 500);
+                }
+                return;
+            }
+
+            const catalog = items.map(item => ({
+                id: item.id || '',
+                title: item.title || '',
+                description: item.description || '',
+                link: item.link || '',
+                trustLevel: item.trustLevel || ''
+            }));
+
+            if (catalog.length === lastCapturedCount) {
+                renderBadge(screen, catalog);
+                return;
+            }
+            lastCapturedCount = catalog.length;
+
+            const dumpStr = JSON.stringify(catalog, null, 2);
+
+            try {
+                localStorage.setItem('__antigravity_mcp_dump__', dumpStr);
+            } catch (e) {}
+
+            window.__antigravity_mcp_dump__ = catalog;
+            window.__exportMcpCatalog = function() {
+                console.log(dumpStr);
+                return catalog;
+            };
+
+            try {
+                const req = typeof require === 'function' ? require : null;
+                if (req) {
+                    const fs = req('fs');
+                    const path = req('path');
+                    const os = req('os');
+                    if (fs && path) {
+                        const filePaths = [
+                            'e:/OneDrive/Me/antigravity2-cn/scratch/mcp_catalog_dump.json',
+                            os ? path.join(os.homedir(), '.gemini', 'antigravity', 'mcp_catalog_dump.json') : null
+                        ].filter(Boolean);
+                        for (const fp of filePaths) {
+                            try {
+                                const dir = path.dirname(fp);
+                                if (fs.existsSync(dir)) {
+                                    fs.writeFileSync(fp, dumpStr, 'utf-8');
+                                    console.log('[Antigravity CN] MCP Catalog saved to: ' + fp);
+                                }
+                            } catch (err) {}
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            console.log('%c[Antigravity CN] 已自动捕获 ' + catalog.length + ' 个 MCP 服务器！', 'color: #10b981; font-weight: bold;', catalog);
+            console.log('[Antigravity CN] 如需查看/导出 JSON，可在控制台执行: copy(window.__exportMcpCatalog())');
+
+            renderBadge(screen, catalog);
+        } catch (e) {}
+    }
+
     const observer = new MutationObserver(mutations => {
+        let hasMcpModal = false;
         for (const m of mutations) {
             if (m.type === 'childList') {
-                for (const n of m.addedNodes) translateNode(n);
+                for (const n of m.addedNodes) {
+                    translateNode(n);
+                    if (!hasMcpModal && n.nodeType === 1) {
+                        if (n.getAttribute && n.getAttribute('data-testid') === 'add-mcp-screen') {
+                            hasMcpModal = true;
+                        } else if (n.querySelector && n.querySelector('[data-testid="add-mcp-screen"]')) {
+                            hasMcpModal = true;
+                        }
+                    }
+                }
             } else if (m.type === 'characterData') {
                 translateNode(m.target);
             }
         }
+        if (hasMcpModal) scheduleMcpSniffer();
     });
 
     const obsOpts = { childList: true, subtree: true, characterData: true };
@@ -498,6 +739,9 @@ function generateJs() {
             try {
                 observer.observe(target, obsOpts);
                 translateNode(target);
+                if (document.querySelector('[data-testid="add-mcp-screen"]')) {
+                    scheduleMcpSniffer();
+                }
             } catch (e) {}
         }
     };
@@ -573,7 +817,7 @@ function checkIfAppIsRunning() {
             const stdout = child_process.execSync('tasklist /fi "imagename eq Antigravity.exe" /nh', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
             return stdout.toLowerCase().includes('antigravity.exe');
         } else if (process.platform === 'darwin') {
-            const stdout = child_process.execSync('pgrep -f Antigravity', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+            const stdout = child_process.execSync('pgrep -x Antigravity || pgrep -f "/Contents/MacOS/Antigravity"', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
             return stdout.trim().length > 0;
         }
     } catch (e) {
@@ -588,7 +832,7 @@ function closeAntigravityProcesses() {
         if (process.platform === 'win32') {
             child_process.execSync('taskkill /f /im Antigravity.exe /t >nul 2>nul');
         } else {
-            child_process.execSync('pkill -f Antigravity >/dev/null 2>&1');
+            child_process.execSync('killall Antigravity >/dev/null 2>&1; killall "Antigravity Helper" >/dev/null 2>&1; pkill -x Antigravity >/dev/null 2>&1; pkill -f "/Contents/MacOS/Antigravity" >/dev/null 2>&1');
         }
     } catch (e) {
         // ignore
@@ -669,6 +913,9 @@ function detectInstallationDir(manualDir) {
     } else if (process.platform === 'darwin') {
         addCandidate("/Applications/Antigravity.app");
         addCandidate(path.join(process.env.HOME || '', 'Applications', 'Antigravity.app'));
+        if (process.env.SUDO_USER && process.env.SUDO_USER !== 'root') {
+            addCandidate(path.join('/Users', process.env.SUDO_USER, 'Applications', 'Antigravity.app'));
+        }
     }
 
     for (const p of candidates) {
@@ -694,7 +941,14 @@ function runCommandSync(cmd) {
 function cleanElectronCache() {
     let appSupportDir = "";
     if (process.platform === 'darwin') {
-        appSupportDir = path.join(os.homedir(), 'Library', 'Application Support', 'Antigravity');
+        let userHome = os.homedir();
+        if (process.env.SUDO_USER && process.env.SUDO_USER !== 'root') {
+            const sudoHome = path.join('/Users', process.env.SUDO_USER);
+            if (fs.existsSync(sudoHome)) {
+                userHome = sudoHome;
+            }
+        }
+        appSupportDir = path.join(userHome, 'Library', 'Application Support', 'Antigravity');
     } else if (process.platform === 'win32') {
         const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
         appSupportDir = path.join(appData, 'Antigravity');
@@ -737,7 +991,7 @@ function resignAppOnMac(anyPath) {
     
     if (targetApp && fs.existsSync(targetApp)) {
         try {
-            runCommandSync(`xattr -d -r com.apple.quarantine "${targetApp}"`);
+            runCommandSync(`xattr -cr "${targetApp}"`);
         } catch (e) {}
         console.log(`[签名] 检测到 macOS 平台，正在对应用包进行本地 ad-hoc 深度重签名: ${targetApp} ...`);
         const signRes = runCommandSync(`codesign --force --deep --sign - "${targetApp}"`);
@@ -895,9 +1149,16 @@ function install20(resourcesDir) {
         'Zoom In': '放大',
         'Zoom Out': '縮小',
         'Toggle Full Screen': '切換全螢幕',
+        'Toggle Between Light/Dark Themes': '切換淺色/深色佈景主題',
         'Split Terminal': '分割終端機',
         'Split Conversation Horizontally': '水平分割對話',
         'Split Conversation Vertically': '垂直分割對話',
+        'Split': '分割',
+        'Split Right': '向右分割',
+        'Split Down': '向下分割',
+        'Replace With New': '替換為新對話',
+        'Show in File Explorer': '在檔案總管中顯示',
+        'Reveal in Finder': '在 Finder 中顯示',
         'Find in conversation': '在對話中尋找',
         'Version': '版本'
     }` : `{
@@ -926,9 +1187,16 @@ function install20(resourcesDir) {
         'Zoom In': '放大',
         'Zoom Out': '缩小',
         'Toggle Full Screen': '切换全屏',
+        'Toggle Between Light/Dark Themes': '切换浅色/深色主题',
         'Split Terminal': '拆分终端',
         'Split Conversation Horizontally': '水平拆分会话',
         'Split Conversation Vertically': '垂直拆分会话',
+        'Split': '拆分',
+        'Split Right': '向右拆分',
+        'Split Down': '向下拆分',
+        'Replace With New': '替换为新会话',
+        'Show in File Explorer': '在文件资源管理器中显示',
+        'Reveal in Finder': '在访达中显示',
         'Find in conversation': '在会话中查找',
         'Version': '版本'
     }`};
@@ -1396,7 +1664,11 @@ function main() {
                     console.warn(`[警告] 未找到客户端主程序: ${exePath}`);
                 }
             } else if (process.platform === 'darwin') {
-                child_process.exec(`open "${installDir}"`);
+                if (process.env.SUDO_USER && process.env.SUDO_USER !== 'root') {
+                    child_process.exec(`sudo -u "${process.env.SUDO_USER}" open "${installDir}"`);
+                } else {
+                    child_process.exec(`open "${installDir}"`);
+                }
                 console.log("[启动] 客户端启动成功！");
             }
         } catch (e) {

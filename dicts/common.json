@@ -326,5 +326,13 @@
     "Open in Editor": "在编辑器中打开",
     "Documentation": "文档",
     "Help": "帮助",
-    "Select Theme": "选择主题"
+    "Select Theme": "选择主题",
+    "Split": "拆分",
+    "Split Right": "向右拆分",
+    "Split Down": "向下拆分",
+    "Replace With New": "替换为新会话",
+    "Remove From Split": "退出拆分",
+    "Show in File Explorer": "在文件资源管理器中显示",
+    "Reveal in Finder": "在访达中显示",
+    "Show in File Manager": "在文件管理器中显示"
 }

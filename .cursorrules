@@ -6,7 +6,7 @@ When working on this project (translating / localizing Antigravity to Chinese), 
 Whenever you modify, add, or delete any translation keys in `dicts/` or `dicts_tw/`:
 - You **MUST** run the verification script in the terminal:
   ```bash
-  node scratch/compare_dicts.js
+  node scripts/compare_dicts.js
   ```
 - If the script outputs any errors (missing keys in either Simplified or Traditional Chinese dictionaries), you **MUST** fix them to ensure both directories are perfectly aligned. Do not finish your task until the command runs successfully and prints `All dictionaries are perfectly aligned!`.
 
